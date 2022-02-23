@@ -1,5 +1,5 @@
 {
-    "name": "runtime/swoole",
+    "name": "cayeye-io/swoole",
     "description": "Swoole runtime",
     "license": "MIT",
     "type": "library",
