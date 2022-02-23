@@ -47,8 +47,12 @@ final class SymfonyHttpBridge
             case $sfResponse instanceof BinaryFileResponse && $sfResponse->headers->has('Content-Range'):
             case $sfResponse instanceof StreamedResponse:
                 ob_start(function ($buffer) use ($response) {
-                    $response->write($buffer);
+                    if(empty($buffer))
+                        return;
 
+                    if(!$response->isWritable() || $response->write($buffer) === false) {
+                        throw new \Exception("Response is not writable");
+                    }
                     return '';
                 }, 4096);
                 $sfResponse->sendContent();
