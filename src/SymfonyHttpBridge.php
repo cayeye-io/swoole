@@ -57,7 +57,8 @@ final class SymfonyHttpBridge
                 }, 4096);
                 $sfResponse->sendContent();
                 ob_end_clean();
-                $response->end();
+                if($response->isWritable())
+                    $response->end();
                 break;
             case $sfResponse instanceof BinaryFileResponse:
                 $response->sendfile($sfResponse->getFile()->getPathname());
