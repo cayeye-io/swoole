@@ -51,12 +51,19 @@ final class SymfonyHttpBridge
                         return;
 
                     if(!$response->isWritable() || $response->write($buffer) === false) {
-                        throw new \Exception("Response is not writable");
+                        throw new StreamClosedException("Client closed the stream");
                     }
                     return '';
                 }, 4096);
-                $sfResponse->sendContent();
+
+                try {
+                    $sfResponse->sendContent();
+                } catch(StreamClosedException $e) {
+                    // swallow StreamClosedException if it was not handled by the callback
+                }
+
                 ob_end_clean();
+
                 if($response->isWritable())
                     $response->end();
                 break;
