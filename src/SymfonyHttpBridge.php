@@ -46,15 +46,22 @@ final class SymfonyHttpBridge
         switch (true) {
             case $sfResponse instanceof BinaryFileResponse && $sfResponse->headers->has('Content-Range'):
             case $sfResponse instanceof StreamedResponse:
+                // register an outer ob_handler that will always swallow all messages that would
+                // be send to stdout otherwise, when the other ob_handler throws an exception
+                ob_start(function () {
+                    return '';
+                });
+
                 ob_start(function ($buffer) use ($response) {
                     if(empty($buffer))
                         return;
 
-                    if(!$response->isWritable() || $response->write($buffer) === false) {
+                    if(!$response->isWritable() || $response->write($buffer) === false)
                         throw new StreamClosedException("Client closed the stream");
-                    }
+
                     return '';
                 }, 4096);
+
 
                 try {
                     $sfResponse->sendContent();
@@ -62,7 +69,8 @@ final class SymfonyHttpBridge
                     // swallow StreamClosedException if it was not handled by the callback
                 }
 
-                ob_end_clean();
+                ob_end_clean(); // closes inner ob_handler
+                ob_end_clean(); // closes outer ob_handler
 
                 if($response->isWritable())
                     $response->end();
